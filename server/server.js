@@ -15,14 +15,25 @@ app.use(express.static(publicPath));
 io.on('connection', (socket) => {
   console.log('New user connected');
 
+  // send event to the socket connection client
   socket.emit('newMessage', {
+    text: 'Welcome to the chat room!'
+  });
+
+  // broadcase event to every listener by itself
+  socket.broadcast.emit('newMessage', {
     from: 'user123',
-    text: 'hello, world',
-    createAt: 1234
+    text: 'User123 joins the chat room!',
+    createdAt: new Date().getTime()
   });
 
   socket.on('createMessage', (message) => {
     console.log('create message', message);
+    io.emit('newMessage', {
+      from: message.from,
+      text: message.text,
+      createdAt: new Date().getTime()
+    });
   });
 
   socket.on('disconnect', () => {
