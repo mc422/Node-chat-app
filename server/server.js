@@ -3,6 +3,8 @@ const http = require('http');
 const express = require('express');
 const socketIO = require('socket.io');
 
+const {generateMessage} = require('./utils/message');
+
 const port = process.env.PORT || 3000;
 const publicPath = path.join(__dirname, '../public');
 
@@ -16,24 +18,22 @@ io.on('connection', (socket) => {
   console.log('New user connected');
 
   // send event to the socket connection client
-  socket.emit('newMessage', {
-    text: 'Welcome to the chat room!'
-  });
+  socket.emit(
+    'newMessage',
+    generateMessage('admin', 'Welcome to the chat room!')
+  );
 
   // broadcase event to every listener by itself
-  socket.broadcast.emit('newMessage', {
-    from: 'user123',
-    text: 'User123 joins the chat room!',
-    createdAt: new Date().getTime()
-  });
+  socket.broadcast.emit(
+    'newMessage',
+    generateMessage('user123', 'User123 joins the chat room!')
+  );
 
-  socket.on('createMessage', (message) => {
+  socket.on('createMessage', (message, callback) => {
     console.log('create message', message);
-    io.emit('newMessage', {
-      from: message.from,
-      text: message.text,
-      createdAt: new Date().getTime()
-    });
+
+    io.emit('newMessage', generateMessage(message.from, message.text));
+    callback('Get new message in server');
   });
 
   socket.on('disconnect', () => {
