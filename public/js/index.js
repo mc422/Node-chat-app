@@ -10,17 +10,20 @@ socket.on('disconnect', function () {
 
 socket.on('newMessage', function (message) {
   console.log('Receive new message', message);
+  var formatedTime = moment(message.createdAt).format('h:mm a');
 
   var li = jQuery('<li></li>');
-  li.text(`${message.from}: ${message.text}`);
+  li.text(`${formatedTime} - ${message.from}: ${message.text}`);
   jQuery('#messages').append(li);
 });
 
 socket.on('newLocationMessage', function (message) {
+  var formatedTime = moment(message.createdAt).format('h:mm a');
+
   var li = jQuery('<li></li>');
   var hyperLink = jQuery('<a target="_blank">Current Location</a>');
 
-  li.text(`${message.from}: `);
+  li.text(`${formatedTime} - ${message.from}: `);
   hyperLink.attr('href', message.url);
   li.append(hyperLink);
   jQuery('#messages').append(li);
