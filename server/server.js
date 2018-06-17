@@ -4,6 +4,7 @@ const express = require('express');
 const socketIO = require('socket.io');
 
 const {generateMessage, generateLocationMessage} = require('./utils/message');
+const {isRealString} = require('./utils/validation');
 
 const port = process.env.PORT || 3000;
 const publicPath = path.join(__dirname, '../public');
@@ -17,17 +18,32 @@ app.use(express.static(publicPath));
 io.on('connection', (socket) => {
   console.log('New user connected');
 
-  // send event to the socket connection client
-  socket.emit(
-    'newMessage',
-    generateMessage('admin', 'Welcome to the chat room!')
-  );
+  socket.on('join', (params, callback) => {
+    if (!isRealString(params.name) || !isRealString(params.room)) {
+      callback('Name and room name are required');
+    }
 
-  // broadcase event to every listener by itself
-  socket.broadcast.emit(
-    'newMessage',
-    generateMessage('user123', 'User123 joins the chat room!')
-  );
+    // send socket event to specific namespace
+    // io.emit -> io.to('Room').emit()
+    // socket.broadcast.to('Room').emit()
+
+    // allows you to “namespace” your sockets
+    socket.join(params.room);
+
+    // send event to the socket connection client
+    socket.emit(
+      'newMessage',
+      generateMessage('Admin', 'Welcome to the chat room!')
+    );
+
+    // broadcase event to every listener under special 'room'
+    socket.broadcast.to(params.room).emit(
+      'newMessage',
+      generateMessage('Admin', `${params.name} joins the chat room!`)
+    );
+
+    callback();
+  });
 
   socket.on('createMessage', (message, callback) => {
     console.log('create message', message);
